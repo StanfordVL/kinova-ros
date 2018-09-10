@@ -46,25 +46,7 @@ int main(int argc, char **argv)
         try
         {
             kinova::KinovaComm comm(nh, api_mutex, is_first_init,kinova_robotType);
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
-            ROS_ERROR_STREAM("before");
             kinova::KinovaArm kinova_arm(comm, nh, kinova_robotType, kinova_robotName);
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
-            ROS_ERROR_STREAM("after");
             kinova::KinovaPoseActionServer pose_server(comm, nh, kinova_robotType, kinova_robotName);
             kinova::KinovaAnglesActionServer angles_server(comm, nh);
             kinova::KinovaFingersActionServer fingers_server(comm, nh);
