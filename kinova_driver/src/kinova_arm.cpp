@@ -11,7 +11,6 @@
 #include <boost/lexical_cast.hpp>
 #include <kinova_driver/kinova_ros_types.h>
 
-
 namespace
 {
     /// \brief Convert Kinova-specific angle degree variations (0..180, 360-181) to
@@ -166,6 +165,7 @@ KinovaArm::KinovaArm(KinovaComm &arm, const ros::NodeHandle &nodeHandle, const s
     }
 
     /* Set up Services */
+    changegravity_service_ = node_handle_.advertiseService("in/change_gravity", &KinovaArm::changeGravityServiceCallback, this);
     stop_service_ = node_handle_.advertiseService("in/stop", &KinovaArm::stopServiceCallback, this);
     start_service_ = node_handle_.advertiseService("in/start", &KinovaArm::startServiceCallback, this);
     homing_service_ = node_handle_.advertiseService("in/home_arm", &KinovaArm::homeArmServiceCallback, this);
@@ -230,7 +230,11 @@ KinovaArm::KinovaArm(KinovaComm &arm, const ros::NodeHandle &nodeHandle, const s
 
     status_timer_ = node_handle_.createTimer(ros::Duration(status_interval_seconds_),
                                            &KinovaArm::statusTimer, this);
-
+    //float gravity[3];
+    //gravity[0] = 0;
+    //gravity[1] = -9.80665;
+    //gravity[3] = 0;
+    //kinova_comm_.setGravityVector(gravity);
     ROS_INFO("The arm is ready to use.");
 }
 
@@ -239,6 +243,16 @@ KinovaArm::~KinovaArm()
 {
 }
 
+
+bool KinovaArm::changeGravityServiceCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response) {
+   float gravity[3];
+    gravity[0] = 0;
+    gravity[1] = -9.80665;
+    gravity[3] = 0;
+    kinova_comm_.setGravityVector(gravity);
+
+    return true;
+}
 
 bool KinovaArm::homeArmServiceCallback(kinova_msgs::HomeArm::Request &req, kinova_msgs::HomeArm::Response &res)
 {

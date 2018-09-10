@@ -176,7 +176,7 @@ class KinovaComm
     int SetRedundancyResolutionToleastSquares(int state);
 
      // %EndTag(Cartesian Control)%
-
+    int setGravityVector(float (&gravity)[3]);
 
  private:
     boost::recursive_mutex& api_mutex_;
