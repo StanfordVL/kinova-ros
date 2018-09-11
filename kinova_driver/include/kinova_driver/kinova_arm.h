@@ -18,6 +18,7 @@
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include <sensor_msgs/JointState.h>
+#include <std_srvs/Empty.h>
 
 #include <kinova_msgs/Stop.h>
 #include <kinova_msgs/Start.h>
@@ -72,6 +73,7 @@ class KinovaArm
     void forceSubscriberCallback(const kinova_msgs::CartesianForceConstPtr& force);
 
     // Service callbacks -----------------------------------------------------------
+    bool changeGravityServiceCallback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
     bool stopServiceCallback(kinova_msgs::Stop::Request &req, kinova_msgs::Stop::Response &res);
     bool startServiceCallback(kinova_msgs::Start::Request &req, kinova_msgs::Start::Response &res);
     bool homeArmServiceCallback(kinova_msgs::HomeArm::Request &req, kinova_msgs::HomeArm::Response &res);
@@ -133,6 +135,7 @@ class KinovaArm
     ros::Publisher joint_command_publisher_;
     ros::Publisher cartesian_command_publisher_;
 
+    ros::ServiceServer changegravity_service_;
     ros::ServiceServer stop_service_;
     ros::ServiceServer start_service_;
     ros::ServiceServer homing_service_;

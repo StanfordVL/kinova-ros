@@ -1613,4 +1613,10 @@ int KinovaComm::SetRedundancyResolutionToleastSquares(int state)
 }
 
 
+
+int KinovaComm::setGravityVector(float (&gravity)[3])
+{
+  return kinova_api_.setGravityVector(gravity);
+}
+
 }  // namespace kinova
