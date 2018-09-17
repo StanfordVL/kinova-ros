@@ -104,31 +104,15 @@ class Trajectory(object):
         self._goal.trajectory.joint_names = ['m1n6s200_joint_1', 'm1n6s200_joint_2', 'm1n6s200_joint_3', 'm1n6s200_joint_4', 'm1n6s200_joint_5', 'm1n6s200_joint_6']
 
 
-def main():
-    """Joint Trajectory Example: Simple Action Client
-    Creates a client of the Joint Trajectory Action Server
-    to send commands of standard action type,
-    control_msgs/FollowJointTrajectoryAction.
-    Make sure to start the joint_trajectory_action_server
-    first. Then run this example command a short series of trajectory points for the arm
-    to follow.
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('filename')
-    args = parser.parse_args()
-    bag = rosbag.Bag(args.filename)
+def replay_rosbag_trajectory(filename):
+    bag = rosbag.Bag(filename)
     arm_joints_names = ['m1n6s200_joint_1', 'm1n6s200_joint_2', 'm1n6s200_joint_3', 'm1n6s200_joint_4', 'm1n6s200_joint_5', 'm1n6s200_joint_6']
     finger_joints_names = ['m1n6s200_joint_finger_1', 'm1n6s200_joint_finger_2']
     
     
-    print("Initializing node... ")
-    rospy.init_node("joint_trajectory_client")
-    print("Running. Ctrl-c to quit")
-    
     client_move_joints = actionlib.SimpleActionClient('/m1n6s200_driver/joints_action/joint_angles',
                                           kinova_msgs.msg.ArmJointAnglesAction)
     client_move_joints.wait_for_server()
-
 
     traj = Trajectory()
     rospy.on_shutdown(traj.stop)
@@ -150,34 +134,52 @@ def main():
         else:   
             time = slower_factor*(msg.header.stamp - first_time)               
         velocities = msg.velocity[4:10]
-        print(positions)
-        print(velocities)
-        print(time.to_sec())
+        #print(positions)
+        #print(velocities)
+        #print(time.to_sec())
         traj.add_point(positions, velocities, time)  
         last_time = msg.header.stamp      
             
     bag.close()    
     
-    nb = raw_input('Moving to the starting position of the trajectory, press return')   
+    #nb = raw_input('Moving to the starting position of the trajectory, press return')   
     
     first_position_degrees = [val_rad*180.0/np.pi for val_rad in first_position] + [0]
     
-    print(first_position_degrees)
-    
-    
+    #print(first_position_degrees)       
     
     result = joint_position_client(first_position_degrees, 'm1n6s200_')
 
     #rospy.sleep(20.)
     
-    print("Expected trajectory time: ", slower_factor*(last_time - first_time).to_sec())
+    #print("Expected trajectory time: ", slower_factor*(last_time - first_time).to_sec())
     
-    nb = raw_input('Starting trajectory, press return')   
+    #nb = raw_input('Starting trajectory, press return')   
     
     traj.start()
     traj.wait(slower_factor*(last_time - first_time) + rospy.Duration(10))
     print(traj.result())
     print("Exiting - Joint Trajectory Action Complete")
+
+
+def main():
+    """Joint Trajectory Example: Simple Action Client
+    Creates a client of the Joint Trajectory Action Server
+    to send commands of standard action type,
+    control_msgs/FollowJointTrajectoryAction.
+    Make sure to start the joint_trajectory_action_server
+    first. Then run this example command a short series of trajectory points for the arm
+    to follow.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename')
+    args = parser.parse_args()
+
+    print("Initializing node... ")
+    rospy.init_node("joint_trajectory_client")
+    print("Running. Ctrl-c to quit")
+
+    replay_rosbag_trajectory(args.filename)
 
 if __name__ == "__main__":
     main()
