@@ -17,6 +17,7 @@ from sensor_msgs.msg import JointState
 import argparse
 
 from std_msgs.msg import Int16, UInt8
+from jr2_msgs.msg import EmotionType
 
 import importlib
 
@@ -98,8 +99,8 @@ neutral = [[0, 0, 0, 0, 0, 0, 0]]
 happy = [[0, -10, -20, 0, 0, 0, 0], [0, 10, 10, 0, 0, 0, 0], [0, -10, -20, 0, 0, 0, 0], [0, 10, 10, 0, 0, 0, 0]]
 sad = [[20, 20, -50, -180, 0, 0, 0]]
 hello = [[15, 0, 0, 0, 0, 0, 0], [-15, 0, 0, 0, 0, 0, 0], [15, 0, 0, 0, 0, 0, 0], [-15, 0, 0, 0, 0, 0, 0]]
-emotions_to_gestures = {0:neutral, 1:happy, 2:sad, 3:hello}
-emotions_to_gestures_str = {0:'neutral', 1:'happy', 2:'sad', 3:'hello'}
+emotions_to_gestures = {EmotionType.NEUTRAL:neutral, EmotionType.HAPPY:happy, EmotionType.HAPPY2:happy, EmotionType.SAD:sad, EmotionType.EMBARRASSED+1:hello}
+emotions_to_gestures_str = {EmotionType.NEUTRAL:'neutral', EmotionType.HAPPY:'happy', EmotionType.HAPPY2:'happy2', EmotionType.SAD:'sad', EmotionType.EMBARRASSED+1:'hello'}
 executing = False
 executing_fingers = False
 executing_arm_pose = 0
@@ -108,15 +109,17 @@ neutral_fingers = [[0, 0]]
 happy_fingers = [[finger_maxTurn, finger_maxTurn], [0,0], [finger_maxTurn,finger_maxTurn], [0,0]]
 sad_fingers = [[0, 0]]
 hello_fingers = [[finger_maxTurn, finger_maxTurn], [0,0], [finger_maxTurn,finger_maxTurn], [0,0]]
-emotions_to_finger_gestures = {0:neutral_fingers, 1:happy_fingers, 2:sad_fingers, 3:hello_fingers}
+emotions_to_finger_gestures = {EmotionType.NEUTRAL:neutral_fingers, EmotionType.HAPPY:happy_fingers, EmotionType.HAPPY2 :happy_fingers, EmotionType.SAD:sad_fingers, EmotionType.EMBARRASSED+1:hello_fingers}
 def arm_gesture_cb(emotion_msg):
     global executing
     
-    print 'Emotion received'
-    if not executing:
-        executing = True
-        execute_gesture(emotion_msg.data)   
-        executing = False     
+    if emotion_msg.data in emotions_to_gestures.keys():
+    
+        print 'Emotion received'
+        if not executing:
+            executing = True
+            execute_gesture(emotion_msg.data)   
+            executing = False     
         
 def execute_gesture(emotion_label):
     global initial_pose
@@ -125,6 +128,10 @@ def execute_gesture(emotion_label):
     result = joint_position_client(initial_pose, 'm1n6s200_') 
     
     print 'Executing emotion ' + emotions_to_gestures_str[emotion_label]
+    
+    
+    
+    print emotions_to_gestures[emotion_label]
     
     executing_arm_pose = len(emotions_to_gestures[emotion_label]) - 1
     
@@ -136,12 +143,14 @@ def execute_gesture(emotion_label):
         
 def fingers_gesture_cb(emotion_msg):
     global executing_fingers
-    print 'Emotion received (Fingers)'
-    if not executing_fingers:
-        executing_fingers = True
-        print 'inside'
-        execute_gesture_fingers(emotion_msg.data)  
-        executing_fingers = False   
+    
+    if emotion_msg.data in emotions_to_gestures.keys():
+        print 'Emotion received (Fingers)'
+        if not executing_fingers:
+            executing_fingers = True
+            print 'inside'
+            execute_gesture_fingers(emotion_msg.data)  
+            executing_fingers = False   
         
 def execute_gesture_fingers(emotion_label):
     global initial_pose
