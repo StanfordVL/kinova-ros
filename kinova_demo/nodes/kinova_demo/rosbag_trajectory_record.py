@@ -47,6 +47,8 @@ import numpy as np
 
 import rospkg
 
+initial_pose = [258.734375, 79.6875, 136.828125, 88.7045516968, 5.86363649368, 175.227279663, 0.0]
+
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
     FollowJointTrajectoryGoal,

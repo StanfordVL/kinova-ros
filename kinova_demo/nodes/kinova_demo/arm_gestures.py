@@ -113,23 +113,21 @@ sad_fingers = [[0, 0]]
 hello_fingers = [[finger_maxTurn, finger_maxTurn], [0,0], [finger_maxTurn,finger_maxTurn], [0,0]]
 emotions_to_finger_gestures = {EmotionType.NEUTRAL:neutral_fingers, EmotionType.HAPPY:happy_fingers, EmotionType.HAPPY2 :happy_fingers, EmotionType.SAD:sad_fingers, EmotionType.EMBARRASSED+1:hello_fingers}
 
-neutral_bag = '~/emotion_bags/neutral.bag'
-happy_bag = '~/emotion_bags/happy.bag'
-sad_bag = '~/emotion_bags/sad.bag'
-hello_bag = '~/emotion_bags/hello.bag'
+neutral_bag = '/home/stanley/emotion_bags/neutral.bag'
+happy_bag = '/home/stanley/emotion_bags/happy.bag'
+sad_bag = '/home/stanley/emotion_bags/sad.bag'
+hello_bag = '/home/stanley/emotion_bags/hello.bag'
 
 emotions_to_gesture_bags = {EmotionType.NEUTRAL:neutral_bag, EmotionType.HAPPY:happy_bag, EmotionType.HAPPY2:happy_bag, EmotionType.SAD:sad_bag, EmotionType.EMBARRASSED+1:hello_bag}
 
 
 def arm_gesture_cb(emotion_msg):
-    global executing
-    
-    if emotion_msg.data in emotions_to_gestures.keys():
-    
+    global executing    
+    if emotion_msg.data in emotions_to_gestures.keys():    
         print 'Emotion received'
         if not executing:
             executing = True
-            execute_gesture(emotion_msg.data)   
+            execute_gesture_bag(emotion_msg.data)   
             executing = False     
         
 def execute_gesture(emotion_label):
@@ -140,8 +138,7 @@ def execute_gesture(emotion_label):
     
     print 'Executing emotion ' + emotions_to_gestures_str[emotion_label]
     
-    
-    
+        
     print emotions_to_gestures[emotion_label]
     
     executing_arm_pose = len(emotions_to_gestures[emotion_label]) - 1
@@ -153,14 +150,15 @@ def execute_gesture(emotion_label):
 
 
 def execute_gesture_bag(emotion_label):
-	global initial_pose
+    global initial_pose
     global executing
     global executing_arm_pose
     
     print 'Executing emotion ' + emotions_to_gestures_str[emotion_label]
-    print 'Executing bag ' + emotions_to_gestures_bag[emotion_label]
+    print 'Executing bag ' + emotions_to_gesture_bags[emotion_label]
 
-    replay_rosbag_trajectory(emotions_to_gestures_bag[emotion_label])   
+    replay_rosbag_trajectory(emotions_to_gesture_bags[emotion_label])
+    print 'Executed'
         
         
 def fingers_gesture_cb(emotion_msg):
@@ -209,13 +207,15 @@ def main():
     
     #nb = raw_input('Moving to the starting position of the emotions, press return')   
     
-    print initial_pose
+    #print initial_pose
     
     result = joint_position_client(initial_pose, 'm1n6s200_')
     
     #nb = raw_input('Listening to emotion commands, press return')   
     
     rospy.Subscriber('/emotion_type', UInt8, arm_gesture_cb)
+    
+    print 'Listening to emotions'
     #rospy.Subscriber('/emotion_type2', UInt8, fingers_gesture_cb)
     #Fingers and arm cannot be controlled at the same time separately
     

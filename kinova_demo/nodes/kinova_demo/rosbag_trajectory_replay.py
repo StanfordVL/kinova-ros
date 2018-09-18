@@ -45,6 +45,8 @@ import numpy as np
 
 import rospkg
 
+initial_pose = [258.734375, 79.6875, 136.828125, 88.7045516968, 5.86363649368, 175.227279663, 0.0]
+
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
     FollowJointTrajectoryGoal,
@@ -148,7 +150,7 @@ def replay_rosbag_trajectory(filename):
     
     #print(first_position_degrees)       
     
-    result = joint_position_client(first_position_degrees, 'm1n6s200_')
+    result = joint_position_client(initial_pose, 'm1n6s200_')
 
     #rospy.sleep(20.)
     
@@ -159,6 +161,9 @@ def replay_rosbag_trajectory(filename):
     traj.start()
     traj.wait(slower_factor*(last_time - first_time) + rospy.Duration(10))
     print(traj.result())
+    
+    result = joint_position_client(initial_pose, 'm1n6s200_')
+    
     print("Exiting - Joint Trajectory Action Complete")
 
 
