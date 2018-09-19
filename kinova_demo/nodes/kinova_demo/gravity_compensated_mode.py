@@ -29,7 +29,7 @@ if __name__ == '__main__':
 			nb = raw_input("Moving robot to candle like position, and setting zero torques, press return to start, n to skip")
 		if (nb != "n" and nb != "N"):
 
-			new_pose = [90, 270, 180, 180, 180, 180, 180]
+			new_pose = [270, 90, 180, 0, 0, 90, 0]
 
 			#result = joint_position_client([180]*7, prefix)
 			result = joint_position_client(new_pose, prefix)
