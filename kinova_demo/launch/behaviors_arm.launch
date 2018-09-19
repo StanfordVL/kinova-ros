@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="kinova_demo" name="arm_gestures" type="arm_gestures.py" output="screen"/>
+    <node pkg="kinova_demo" name="pointing_demo" type="pointing_demo2.py" output="screen"/>
+</launch>
+
