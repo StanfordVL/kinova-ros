@@ -12,6 +12,7 @@ import kinova_msgs.msg
 import geometry_msgs.msg
 import tf
 import std_msgs.msg
+from std_msgs.msg import Bool
 import math
 import thread
 from kinova_msgs.srv import *
@@ -77,6 +78,16 @@ cmd_vel_pub = None
 
 currentBaseOrientation = None
 
+pointing_beha = True
+
+def activate_pointing_beha_cb(msg):
+    global pointing_beha
+    pointing_beha = not msg.data
+    if pointing_beha:
+        print 'Pointing with arm'
+    else:
+        print 'Deactivating pointing with arm'
+
 def getcurrentJointCommand():
     # wait to get current position
     topic_address = '/m1n6s200_driver/out/joint_command'
@@ -121,6 +132,10 @@ def getCurrentBaseOrientationCB(base_orientation_msg):
     
 def pointing_cb(point_msg):
     
+    global pointing_beha
+    if not pointing_beha:
+	return
+
     x_axis = np.array([1,0,0])
     y_axis = np.array([0,1,0])
     z_axis = np.array([0,0,1])
@@ -138,27 +153,64 @@ def pointing_cb(point_msg):
     
     point_msg_cpy = copy(point_msg)
     
+    print point_msg_cpy.point
+    print point_msg_cpy.header.frame_id
     if point_msg_cpy.point.z == 0:
         point_msg_cpy.point.z = 1.8
         
-    print "here"
         
     listener.waitForTransform("/base_link", "/m1n6s200_link_3", rospy.Time(), rospy.Duration(10.0))
     listener.waitForTransform("/base_link", "/m1n6s200_link_5", rospy.Time(), rospy.Duration(10.0))
+
+    #Hack: we don't care about the delay
+    point_msg_cpy.header.stamp = rospy.Time.now()
+    point_msg_cpy.header.frame_id = '/base_link'
     
     try:
-        trans_point1 = listener.transformPoint('/m1n6s200_link_3',point_msg_cpy )
-        trans_point2 = listener.transformPoint('/m1n6s200_link_5',point_msg_cpy )
+        (trans, rot) = listener.lookupTransform('/m1n6s200_link_3', '/base_link', rospy.Time(0))
+	#print trans
+	#print rot
+	hh = tf.transformations.quaternion_matrix(rot)
+	hh[0,3] = trans[0]
+	hh[1,3] = trans[1]
+	hh[2,3] = trans[2]
+        #print hh
+	(trans2, rot2) = listener.lookupTransform('/m1n6s200_link_5', '/base_link', rospy.Time(0))
+        hh2 = tf.transformations.quaternion_matrix(rot2)
+        hh2[0,3] = trans2[0]
+        hh2[1,3] = trans2[1]
+        hh2[2,3] = trans2[2]
+
+	point_orig = np.array([point_msg_cpy.point.x,point_msg_cpy.point.y,point_msg_cpy.point.z, 1])
+	trans_point1_np = np.dot(hh,point_orig)
+	trans_point2_np = np.dot(hh2, point_orig)
+        trans_point1 = PointStamped()
+	trans_point1.point.x = trans_point1_np[0]
+	trans_point1.point.y = trans_point1_np[1]
+	trans_point1.point.z = trans_point1_np[2]
+	trans_point2 = PointStamped()
+	trans_point2.point.x = trans_point2_np[0]
+        trans_point2.point.y = trans_point2_np[1]
+        trans_point2.point.z = trans_point2_np[2]
+
+	print trans_point1_np
+
+	#trans_point1 = listener.transformPoint('/m1n6s200_link_3',point_msg_cpy )
+        #trans_point2 = listener.transformPoint('/m1n6s200_link_5',point_msg_cpy )
         
     except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
         print 'No tranform'
         return False
     
     point_axis1 = np.array([trans_point1.point.x,trans_point1.point.y,0])
+    #print point_axis1
     point_axis_norm1 = point_axis1/np.linalg.norm(point_axis1)
+    #print point_axis_norm1
     
     angle_to_y1 = np.arccos(np.dot(y_axis, point_axis_norm1))
+    #print angle_to_y1
     cross_to_y1 = np.cross(y_axis, point_axis_norm1)
+    #print cross_to_y1
     if np.dot(z_axis, cross_to_y1) < 0:
         angle_to_y1 = -angle_to_y1
     
@@ -183,11 +235,16 @@ def pointing_cb(point_msg):
     new_goal = copy(currentJointCommand)
     new_goal[2] += np.rad2deg(angle_to_y1)
     new_goal[4] += np.rad2deg(angle_to_y2)
+    
+    new_goal[2] = max(min(new_goal[2], 120), 20)
+    new_goal[4] = max(min(new_goal[4], 80), -80)
+    
     print new_goal
+
     
     result = joint_position_client(new_goal, 'm1n6s200_')
     
-    rospy.sleep(3)
+    rospy.sleep(0.5)
     
     #cmd_vel = Twist()
     
@@ -232,11 +289,14 @@ def main():
     print("Running. Ctrl-c to quit")
     
     result = joint_position_client(initial_pose_gaze, 'm1n6s200_')  
+
+    rospy.sleep(1)
     
     global listener
     listener = tf.TransformListener()
     
     rospy.Subscriber('/gaze_point_3d', PointStamped, pointing_cb, queue_size=1)
+    rospy.Subscriber('/behavior_is_active/demonstrate_emotions', Bool, activate_pointing_beha_cb)
     
     global cmd_vel_pub
     

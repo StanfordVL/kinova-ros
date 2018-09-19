@@ -12,6 +12,7 @@ import kinova_msgs.msg
 import geometry_msgs.msg
 import tf
 import std_msgs.msg
+from std_msgs.msg import Bool
 import math
 import thread
 from kinova_msgs.srv import *
@@ -60,6 +61,8 @@ prefix = 'NO_ROBOT_TYPE_DEFINED_'
 finger_maxDist = 18.9/2/1000  # max distance for one finger
 finger_maxTurn = 6800  # max thread rotation for one finger
 currentJointCommand = [0] # number of joints is defined in __main__
+
+demo_emo = False
 
 def getcurrentJointCommand():
     # wait to get current position
@@ -123,7 +126,8 @@ emotions_to_gesture_bags = {EmotionType.NEUTRAL:neutral_bag, EmotionType.HAPPY:h
 
 def arm_gesture_cb(emotion_msg):
     global executing    
-    if emotion_msg.data in emotions_to_gestures.keys():    
+    global demo_emo
+    if emotion_msg.data in emotions_to_gestures.keys() and demo_emo:    
         print 'Emotion received'
         if not executing:
             executing = True
@@ -135,18 +139,18 @@ def execute_gesture(emotion_label):
     global executing
     global executing_arm_pose
     result = joint_position_client(initial_pose, 'm1n6s200_') 
+    global demo_emo
     
-    print 'Executing emotion ' + emotions_to_gestures_str[emotion_label]
+    if demo_emo:
+    	print 'Executing emotion ' + emotions_to_gestures_str[emotion_label]
+	print emotions_to_gestures[emotion_label]
     
-        
-    print emotions_to_gestures[emotion_label]
+    	executing_arm_pose = len(emotions_to_gestures[emotion_label]) - 1
     
-    executing_arm_pose = len(emotions_to_gestures[emotion_label]) - 1
-    
-    for i, pose in enumerate(emotions_to_gestures[emotion_label]):
-        print 'pose ' + str(i)
-        executing_arm_pose = len(emotions_to_gestures[emotion_label]) - 1 - i
-        result = joint_position_client((np.array(initial_pose) + np.array(pose)).tolist(), 'm1n6s200_')
+    	for i, pose in enumerate(emotions_to_gestures[emotion_label]):
+        	print 'pose ' + str(i)
+        	executing_arm_pose = len(emotions_to_gestures[emotion_label]) - 1 - i
+        	result = joint_position_client((np.array(initial_pose) + np.array(pose)).tolist(), 'm1n6s200_')
 
 
 def execute_gesture_bag(emotion_label):
@@ -184,6 +188,15 @@ def execute_gesture_fingers(emotion_label):
     print 'finished'
         
 
+def demonstrate_emo_cb(msg):
+    global demo_emo
+    demo_emo = msg.data
+    if demo_emo:
+	print 'Demonstrating emotions with arm'
+        result = joint_position_client(initial_pose, 'm1n6s200_')
+    else:
+	print 'Deactivating demonstration of emotions with arm'
+
 def main():
     """Joint Trajectory Example: Simple Action Client
     Creates a client of the Joint Trajectory Action Server
@@ -208,12 +221,14 @@ def main():
     #nb = raw_input('Moving to the starting position of the emotions, press return')   
     
     #print initial_pose
-    
-    result = joint_position_client(initial_pose, 'm1n6s200_')
+    global demo_emo
+    if demo_emo:
+    	result = joint_position_client(initial_pose, 'm1n6s200_')
     
     #nb = raw_input('Listening to emotion commands, press return')   
     
     rospy.Subscriber('/emotion_type', UInt8, arm_gesture_cb)
+    rospy.Subscriber('/behavior_is_active/demonstrate_emotions', Bool, demonstrate_emo_cb)
     
     print 'Listening to emotions'
     #rospy.Subscriber('/emotion_type2', UInt8, fingers_gesture_cb)
