@@ -74,6 +74,10 @@ add_executable(kinova_arm_driver
   src/nodes/kinova_arm_driver.cpp
 )
 
+add_executable(sai_driver
+  src/nodes/sai_driver.cpp
+)
+
 add_executable(joint_trajectory_action_server 
   src/joint_trajectory_action/joint_trajectory_action_server.cpp
   include/kinova_driver/joint_trajectory_action_server.h)
@@ -102,10 +106,12 @@ add_executable(kinova_tf_updater
 )
 add_dependencies(kinova_driver ${catkin_EXPORTED_TARGETS})
 add_dependencies(kinova_arm_driver ${catkin_EXPORTED_TARGETS})
+add_dependencies(sai_driver ${catkin_EXPORTED_TARGETS})
 add_dependencies(kinova_tf_updater ${catkin_EXPORTED_TARGETS})
 target_link_libraries(kinova_driver ${catkin_LIBRARIES} dl)
 #target_link_libraries(kinova_arm_driver ${catkin_LIBRARIES} dl)
 target_link_libraries(kinova_arm_driver ${catkin_LIBRARIES} kinova_driver)
+target_link_libraries(sai_driver ${catkin_LIBRARIES} kinova_driver)
 target_link_libraries(kinova_tf_updater ${catkin_LIBRARIES})
 
 
@@ -133,7 +139,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 
 ## Mark executables and/or libraries for installation
-install(TARGETS kinova_arm_driver kinova_tf_updater
+install(TARGETS kinova_arm_driver sai_driver kinova_tf_updater
 kinova_interactive_control
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
